@@ -7,13 +7,15 @@ FROM
 	Customers c
 INNER JOIN Orders o ON						-- Соединение таблиц по общему ключу
 	c.customer_id = o.customer_id
-INNER JOIN Shippings s ON
-	s.customer = c.customer_id
-WHERE
-	s.status = 'Delivered'					-- Фильтр на наличие у заказа статуса 'Delivered'
+WHERE EXISTS (
+  SELECT *
+  FROM Shippings s							-- Проверка
+  WHERE s.customer = c.customer_id			-- по совпадающим с таблицей Shippings ключам,
+    AND s.status = 'Delivered'				-- найдется ли хотя бы одна доставка со статусом 'Delivered'
+)
 GROUP BY									-- Группировка полей, связанных с подсчитываемыми полями
 	c.first_name, c.last_name, c.country
 HAVING
-	COUNT(o.order_id) >= 2		-- Фильтр на количество заказов от 2 и более 
+	COUNT(o.order_id) >= 2		-- Фильтр на количество заказов от 2 и более
 ORDER BY
 	c.first_name;				-- Сортировка имен в алф.порядке
